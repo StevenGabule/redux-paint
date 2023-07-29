@@ -3,11 +3,11 @@ import { clearCanvas, drawStroke, setCanvasSize } from './utils/canvasUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { ColorPanel } from './shared/ColorPanel';
 import { EditPanel } from './shared/EditPanel';
-import { historyIndexSelector } from './module/HistoryIndex/reducer';
+import { historyIndexSelector } from './module/historyIndex/reducer';
 import { strokesSelector } from './module/strokes/reducer';
 import { currentStrokeSelector } from './module/currentStroke/reducer';
 import { beginStroke, updateStroke } from './module/currentStroke/actions';
-import { endStroke } from './module/HistoryIndex/action';
+import { endStroke } from './module/shareActions';
 import { useCanvas } from './CanvasContext';
 import { FilePanel } from './shared/FilePanel';
 
@@ -15,17 +15,16 @@ const WIDTH = 1024;
 const HEIGHT = 768;
 
 function App() {
-  const historyIndex = useSelector(historyIndexSelector);
-  const strokes = useSelector(strokesSelector);
   const canvasRef = useCanvas();
-
-  const dispatch = useDispatch();
   const getCanvasWithContext = (canvas = canvasRef.current) => {
     return { canvas, context: canvas?.getContext('2d') };
   };
 
   const currentStroke = useSelector(currentStrokeSelector);
   const isDrawing = !!currentStroke.points.length;
+  const historyIndex = useSelector(historyIndexSelector);
+  const strokes = useSelector(strokesSelector);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const { context } = getCanvasWithContext();
@@ -44,9 +43,11 @@ function App() {
     requestAnimationFrame(() => {
       clearCanvas(canvas);
 
-      strokes.slice(0, strokes.length - historyIndex).forEach((stroke) => {
-        drawStroke(context, stroke.points, stroke.color);
-      });
+      strokes
+        .slice(0, strokes.length - historyIndex)
+        .forEach((stroke) => {
+          drawStroke(context, stroke.points, stroke.color);
+        });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [historyIndex]);
@@ -68,19 +69,19 @@ function App() {
 
   const startDrawing = ({ nativeEvent }: MouseEvent<HTMLCanvasElement>) => {
     const { offsetX, offsetY } = nativeEvent;
-    dispatch(beginStroke(offsetX, offsetY));
+    dispatch(beginStroke({x: offsetX, y: offsetY}));
   };
 
   const draw = ({ nativeEvent }: MouseEvent<HTMLCanvasElement>) => {
     if (!isDrawing) return;
 
     const { offsetX, offsetY } = nativeEvent;
-    dispatch(updateStroke(offsetX, offsetY));
+    dispatch(updateStroke({ x: offsetX, y: offsetY }));
   };
 
   const endDrawing = () => {
     if (isDrawing) {
-      dispatch(endStroke(historyIndex, currentStroke));
+      dispatch(endStroke({historyIndex, stroke: currentStroke}));
     }
   };
 
