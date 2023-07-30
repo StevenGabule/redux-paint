@@ -3,18 +3,21 @@ import { clearCanvas, drawStroke, setCanvasSize } from './utils/canvasUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { ColorPanel } from './shared/ColorPanel';
 import { EditPanel } from './shared/EditPanel';
-import { historyIndexSelector } from './module/historyIndex/slice';
-import { strokesSelector } from './module/strokes/slice';
-import { currentStrokeSelector } from './module/currentStroke/slice';
-import { beginStroke, updateStroke } from './module/currentStroke/slice';
-import { endStroke } from './module/shareActions';
+import { historyIndexSelector } from './modules/historyIndex/slice';
+import { currentStrokeSelector } from './modules/currentStroke/slice';
+import { beginStroke, updateStroke } from './modules/currentStroke/slice';
+import { endStroke } from './modules/shareActions';
 import { useCanvas } from './CanvasContext';
 import { FilePanel } from './shared/FilePanel';
+import { ModalLayer } from './ModalLayer';
+import { strokesSelector } from './modules/strokes/selectors';
+import { AppDispatch } from './store';
 
 const WIDTH = 1024;
 const HEIGHT = 768;
 
 function App() {
+  const dispatch = useDispatch<AppDispatch>();
   const canvasRef = useCanvas();
   const getCanvasWithContext = (canvas = canvasRef.current) => {
     return { canvas, context: canvas?.getContext('2d') };
@@ -24,7 +27,6 @@ function App() {
   const isDrawing = !!currentStroke.points.length;
   const historyIndex = useSelector(historyIndexSelector);
   const strokes = useSelector(strokesSelector);
-  const dispatch = useDispatch();
 
   useEffect(() => {
     const { context } = getCanvasWithContext();
@@ -49,8 +51,8 @@ function App() {
           drawStroke(context, stroke.points, stroke.color);
         });
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [historyIndex]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [historyIndex, strokes]);
 
   useEffect(() => {
     const { canvas, context } = getCanvasWithContext();
@@ -96,6 +98,7 @@ function App() {
       <EditPanel />
       <ColorPanel />
       <FilePanel />
+      <ModalLayer />
       <canvas onMouseDown={startDrawing} onMouseUp={endDrawing} onMouseOut={endDrawing} onMouseMove={draw} ref={canvasRef} />
     </div>
   );

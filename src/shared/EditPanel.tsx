@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { redo, undo } from '../module/historyIndex/slice';
-import { strokesLengthSelector } from '../module/strokes/slice';
+import { redo, undo } from '../modules/historyIndex/slice';
+import { strokesLengthSelector } from '../modules/strokes/slice';
 
 export const EditPanel = () => {
 	const undoLimit = useSelector(strokesLengthSelector)
